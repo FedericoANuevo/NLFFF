@@ -1,0 +1,121 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+% author definitions
+\def\bB{{\boldsymbol{B}}}
+\def\bA{{\boldsymbol{A}}}
+\def\bk{{\boldsymbol{k}}}
+\def\bJ{{\boldsymbol{J}}}
+\def\bu{{\boldsymbol{u}}}
+\def\rot{\boldsymbol{\nabla \times}}
+\def\grad{\boldsymbol{\nabla}}
+\def\div{\boldsymbol{\nabla \cdot}}
+\def\dt#1{\frac{\partial #1}{\partial t}}
+\def\dx#1{\frac{\partial #1}{\partial x}}
+\def\dy#1{\frac{\partial #1}{\partial y}}
+\def\dz#1{\frac{\partial #1}{\partial z}}
+\def\f#1#2#3#4{{f}_{#1,#2,#3}^{(#4)}}
+\def\bF#1{\boldsymbol{F}(#1)}
+%opening
+\title{Numerical notes for a magneto-frictional implementation		}
+\author{Federico A. Nuevo				
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+These notes describe the magnetofrictional implementation developed by Gherardo Valori. We follow the description of the magneto-frictional method discussed in Valori et al. (2005) and Valori et al. (2007).
+\end{abstract}
+
+\section{Basic Equations}
+The magneto-frictional method assumes that in the momentum balance equation the pressure gradient is neglected and the Lorentz force is balanced by a frictional force. 
+\begin{equation}
+ \nu {\bu}= {\bJ} \times {\bB} \,,
+\label{frictional}
+\end{equation}
+where $\nu = B^2/\mu$ is a numeric viscosity with $\mu$  a numerical value that changes in the time. 
+
+The current density is related to the magnetic field as  
+\begin{equation}
+ \bJ = \rot \bB  \,.
+\label{rotor}
+\end{equation}
+
+The evolution of the magnetic field is given by the induction equation
+\begin{equation}
+\dt{\bB} = \rot (\bu \times \bB) + C_L \grad (\div \bB) = \bF{\bB,t}
+\,,
+\label{induction}
+\end{equation}
+where $\bF{\bB,t}$ is an oparator that involves spatial derivatives of $\bB$ and the time. It is defined as:
+\begin{equation}
+ \bF{\bB,t}\equiv \mu \rot \left(\frac{[({ \rot \bB}) \times {\bB}] \times \bB}{B^2}\right) + C_L \grad (\div \bB) \,.
+ \label{opF}
+\end{equation}
+The term $ C_L \grad (\div \bB)$ diffuses the numerical divergences.
+
+Given an initial magnetic field and boundary conditions, the current density is calculated using Equation \ref{rotor} with some Finite Difference (FD) scheme. Then, a fictitious plasma velocity is calculated using Equation \ref{frictional}, after that the magnetic field is evolved introducing $\bJ$ and $\bu$ in Equation \ref{induction} and using some time integration scheme
+
+{\bf An important point that is not clear in the papers is: what are the boundary conditions at the top and the sides of the integration box?}
+
+\section{Finite Difference Scheme}
+
+We discretize the box having a volume $L^3$ using a 3D grid with $x_i=i\Delta x$, $y_j=j\Delta y$ and $z_k=k\Delta z$ where the indexes range from $0$ to $N$ and $\Delta x=\Delta y = \Delta z= L/N$. We assume that the box is a cube, the spatial resolution is the same in all directions and the grid is uniform for simplicity. The bottom boundary ($z=0$) corresponds to $k=0$, the top boundary corresponds to $k=N$, and the side boundaries correspond to $i$ or $j$ equal to $0$ or $N$. The ghost layers correspond to some of the spatial indexes equal to $-1$ or $-2$ or $N+1$ or $N+2$. The time is discretized as $t_n=n\Delta t$.
+
+If $f(x,y,z,t)$ is some component of $\bB$, $\bJ$ or $\bu$ or a combination of components as $(u_xB_y-u_yB_x)$, the discretized version of $f$ is
+\begin{equation}
+\f{i}{j}{k}{n}=f(x_j,y_j,z_k,t_n) 
+\end{equation}
+and its spatial derivatives can be calculated using a fourth order central scheme:
+\begin{equation}
+\left(\dx{f}\right)_{i,j,k}^{(n)}=
+\frac{\f{i-2}{j}{k}{n}-8\f{i-1}{j}{k}{n}+8\f{i+1}{j}{k}{n}-\f{i+2}{j}{k}{n}}{12\Delta x} 
+\label{dx}
+\end{equation}
+\begin{equation}
+\left(\dy{f}\right)_{i,j,k}^{(n)}=
+\frac{\f{i}{j-2}{k}{n}-8\f{i}{j-1}{k}{n}+8\f{i}{j+1}{k}{n}-\f{i}{j+2}{k}{n}}{12\Delta y} 
+\end{equation}
+\begin{equation}
+\left(\dz{f}\right)_{i,j,k}^{(n)}=
+\frac{\f{i}{j}{k-2}{n}-8\f{i}{j}{k-1}{n}+8\f{i}{j}{k+1}{n}-\f{i}{j}{k+2}{n}}{12\Delta z} 
+\label{dz}
+\end{equation}
+
+To use these expressions close to the boundaries (and in the boundaries), we need the ghost layers. The component values in the ghost layers are obtained using a fourth order polynomial extrapolation. {\bf Isn't it better to use a one-sided FD scheme in this grid and not ghost layers with extrapolated values?}
+
+The time integration is obtained using a forward Euler scheme
+\begin{equation}
+ \bB^{(n+1)}=\bB^{(n)}+\Delta t \,\bF{\bB^{(n)},t_n}
+\end{equation}
+To evaluate the spatial derivatives included in the operator $\boldsymbol{F}$ (see Equation \ref{opF}), the Equations \ref{dx} to \ref{dz} are used. I believe that Valori et al. (2011) used a more sophisticated temporal scheme, but we can start to work with a forward  Euler scheme and improve it later.
+
+
+\section{Questions for future implementations}
+
+We discuss with Cristina and Pascal about some new implementations in the magneto-frictional method. We are interested in your opinion. The implementations are modular we can implement some of those or all.
+
+\begin{enumerate}
+ \item We can use a pseudo-spectral (PS) scheme with periodic boundary conditions (i.e. use Fast Fourier Transform (FFT)), instead of using a FD scheme.
+ \item We can include the dynamics of the plasma velocity and use a more realistic viscosity (frictional) term.
+ \begin{equation}
+  \dt{\bu}=-(\bu \cdot \nabla)\bu+\frac{1}{\rho}{\bJ} \times {\bB} +\nu \nabla^2 \bu \,,
+ \end{equation}
+  where $\rho$ is a numerical density (we can choose $\rho \propto B^2$).
+ \item We can use the potential vector $\bA$ that satisfy $\bB=\rot \bA$ to eliminate the numerical divergences. The induction equation for $\bA$ is
+ \begin{equation}
+  \dt{\bA}= \bu \times (\rot \bA) \,.
+ \end{equation}
+ If we work with the potential vector it will be very useful to use a PS scheme with FFT because, in this case, we can calculate the $\bB$ field in a very easy way as: $\bB_\bk= i \bk \times \bA_\bk$.
+\item We can decrease the number of equations by imposing $A_z=0$. This is permitted by the gauge freedom on $\bA$. This is also more accurate mumericaly than solving $\div \bA=0$. It simplifies  also the transformation of $\bA$ to $\bB$, and the reverse way.
+
+\item The boundary conditions at $z=0$ is the vector magnetogram. What about the boundary conditions on $\bu$? $u_z=0$ looks fine. Do we set $\partial u_{x,y} / \partial z=0$ to let some freedom on $u_{x,y}$ evolution? What about lateral and top boundaries? Are open boundary coditions $\partial u_{l}/ \partial n=0$,   $\partial B_{l}/ \partial n=0$ ($l=x,y,z$) fine (with $\partial A_{l}/ \partial n=0$)? (In the case of the spectral code, the periodicity imposes the boundary conditions). Are there not too many boundary conditions? (e.g. for an MHD code at $z=0$, $B_z$, $v_x$, $v_y$ and $v_z$ are imposed, not $B_x$ and $B_y$).
+ \end{enumerate}
+
+
+
+
+\end{document}

@@ -1,0 +1,24 @@
+
+* Es correcto el comentario inmediatamente posterior a la E1. (11)? Creo que matemáticamente puede existir un campo (Bx,By,Bz)_mgm que anule las ecuaciones (6)-(11). Seguramente ocurre que no, entre otras razones porque se toma una región limitada -lo cual ni siquiera garantiza flujo total nulo-, y entonces se proponen los funcionalres L1 y L2 más abajo.
+
+* Sugiero re-expresar: "\noindent donde los coeficientes adimensionales $\mu_i$ ($i=1,..,4$) modulan el peso relativo de los diferentes términos del funcional."
+
+* Sugiero re-expresar "\noindent donde los coeficientes adimencionales $\mu'_i = 1,2,4$ modulan el peso relativo.... (13) y (14). En la técnica PPMF estos dos funcionales son adimensionalizados por los coeficientes:"
+
+* Entonces, inmediatamente luego de la Ec. (19) aclararía: "\noindent proporcionales a los valores característicos de la fuerza y torque magnético, respectivamente, promediados sobre la región medida por el magnetograma."
+
+* Sugiero re-expresar: "El propósito del término funcional $L_4$ construído con este método, denominado \emph{windowed-median technique}, es penalizar en cada punto apartamientos pronunciados respecto de la mediana del entorno dado por la ventana."
+
+* Creo que N_L4 dado por la E1. (21) es incorrecto. No debería ser N_L4 = N_L1, como en la Eq. (18)?
+
+* Sugiero re-expresar: "En lugar de incluir un funcional de este tipo, el PFPMF impone que el campo frontera coincida con el derivado del magnetograma dentro de su nivel de intereza, que debe ser determinado a partir de la técnica observacional."  
+
+* CFL ?
+
+* inertivo = inercial + convectivo ? Por qué este término puede despreciarse de entrada?
+
+* Voy a precisar me cuentes vos nuevamene Eqs. (22) a (29), discutir en particular (26), pero todas en gral.
+
+--hasta aqui puedo llegar hoy. mañana contame estas cosas y luego sigo con milectura para la otra.
+
+salu2.
